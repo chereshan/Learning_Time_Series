@@ -1,0 +1,65 @@
+---
+title: "Time Series"
+output: html_document
+date: "2023-10-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+FRED API
+
+```{r}
+library(fredr)
+fredr_set_key("f36f25b9ad94204bb4f39c489834510f")
+fredr(
+  series_id = "UNRATE",
+  observation_start = as.Date("1990-01-01"),
+  observation_end = as.Date("2020-01-01")
+)
+```
+
+Preprocessing of data before imputation demostration.
+
+```{r zoo}
+library(zoo) ## zoo - временной ряд
+library(data.table) ## data. table - высокопроизводительный
+unemp <- fread("UNRATE.csv")
+unemp [, DATE:=as.Date(DATE) ]
+setkey (unemp, DATE)
+ ## Генерирование набора данных co случайными пропущенными значениям
+rand.unemp.idx <- sample(1:nrow(unemp), 0.1*nrow(unemp))
+rand.unemp <- unemp[-rand.unemp.idx]
+## Генерирование набора данных с пропущенными значениями
+## для высоких уровней безработицыг
+high.unemp.idx <- which (unemp$UNRATE > 8)
+num.to.select <- .2*length (high.unemp.idx)
+high.unemp.idx <- sample(high.unemp.idx,)
+bias.unemp <- unemp[-high.unemp.idx]
+
+```
+
+`data.table package` - alternative for `data.frame`. It's an autonomous library built above `data.frame`. It was developed for financial data analysis.
+
+\
